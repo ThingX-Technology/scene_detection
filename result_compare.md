@@ -1,3 +1,5 @@
+github link: https://github.com/ThingX-Technology/scene_detection.git
+
 ### 聚类实现场景判断
 
 #### 实现原理：
