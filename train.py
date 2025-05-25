@@ -10,8 +10,6 @@ from audiodiffusion.audio_encoder import AudioEncoder
 from utils.oss_utils import *
 import matplotlib.pyplot as plt
 
-
-# 训练集/验证集及其label地址
 text_oss_path = 'nuna_algorithm_simulation_data/boweihan/data/synthesis_data/dialog_data/'
 audio_meta_path = 'synthesis_oss_log_v2.csv'
 train_dir = './dataset/train/audio/'
@@ -27,7 +25,6 @@ mlp_model_path = 'mlp_model.pth'
 tencent_oss = TencentOss()
 
 def train():
-    # 创建DataLoader
     dataset = MyDataset([], [], [])
     dataset.load_train_dataset(text_oss_path, audio_meta_path, train_dir)
     # 划分训练集和验证集
@@ -36,12 +33,10 @@ def train():
     validation_size = dataset_size - train_size
     train_dataset, validation_dataset = random_split(dataset, [train_size, validation_size])
 
-    # 创建DataLoader
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     validation_dataloader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False)
     print(f"训练集大小: {len(train_dataset)}, 验证集大小: {len(validation_dataset)}")
 
-    # 初始化模型、损失函数和优化器
     audio_model = AudioEncoder.from_pretrained("teticio/audio-encoder")
     text_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
     mlp_model = MLPClassifier(100+384, hidden_sizes=[256, 128], output_size=num_classes)
@@ -58,12 +53,10 @@ def train():
     # optimizer = optim.Adam(list(text_model.parameters()) + list(mlp_model.parameters()), lr=lr)
     optimizer = optim.Adam(list(audio_model.parameters()) + list(text_model.parameters()) + list(mlp_model.parameters()), lr=lr)
 
-    # 加载训练权重
     # audio_model.load_state_dict(torch.load(audio_model_path))
     # text_model.load_state_dict(torch.load(text_model_path))
     # mlp_model.load_state_dict(torch.load(mlp_model_path))
 
-    # 记录损失值
     train_losses = []
     train_accs = []
     val_losses = []
@@ -114,7 +107,6 @@ def train():
         
         with torch.no_grad():
             for audio_path, sentence, labels in validation_dataloader:
-                # 获取embeddings
                 embedding1 = audio_model.encode(audio_path)
                 embedding2 = torch.tensor(text_model.encode(sentence))
                 combined_embedding = torch.cat((embedding1, embedding2), dim=-1)
@@ -136,7 +128,6 @@ def train():
               f'Train Loss: {avg_train_loss:.4f}, Train Acc: {train_accuracy:.4f}, '
               f'Val Loss: {avg_val_loss:.4f}, Val Acc: {val_accuracy:.4f}')
         
-        # 如果验证损失有改进，则保存模型
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
             torch.save(audio_model.state_dict(), audio_model_path)

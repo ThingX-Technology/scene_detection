@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 
-# 定义一个多层感知机模型
 class MLPClassifier(nn.Module):
     def __init__(self, input_size, hidden_sizes, output_size=4):
         super(MLPClassifier, self).__init__()
